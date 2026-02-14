@@ -62,9 +62,7 @@
       opacity: 1;
       transition: opacity .25s ease;
     }
-    #quizOverlay.hidden {
-      display: none;
-    }
+    #quizOverlay.hidden { display: none; }
 
     /* Card + animation */
     #quizCard {
@@ -79,10 +77,7 @@
       opacity: 0;
       animation: popIn .35s ease forwards;
     }
-
-    @keyframes popIn {
-      to { transform: translateY(0) scale(1); opacity: 1; }
-    }
+    @keyframes popIn { to { transform: translateY(0) scale(1); opacity: 1; } }
 
     #quizHeader {
       display: flex;
@@ -91,14 +86,12 @@
       gap: 10px;
       margin-bottom: 10px;
     }
-
     #quizTitle {
       margin: 0;
       font-size: 18px;
       letter-spacing: 0.2px;
       opacity: 0.95;
     }
-
     #quizProgressText {
       font-size: 13px;
       opacity: 0.8;
@@ -172,9 +165,7 @@
     }
 
     /* feedback animations */
-    .shake {
-      animation: shake .35s ease;
-    }
+    .shake { animation: shake .35s ease; }
     @keyframes shake {
       0%, 100% { transform: translateX(0); }
       20% { transform: translateX(-10px); }
@@ -182,13 +173,9 @@
       60% { transform: translateX(-7px); }
       80% { transform: translateX(7px); }
     }
+    .fadeSlideOut { opacity: 0; transform: translateY(8px); }
 
-    .fadeSlideOut {
-      opacity: 0;
-      transform: translateY(8px);
-    }
-
-    /* End message overlay (efter quiz) */
+    /* End message toast */
     #endToast {
       position: fixed;
       left: 50%;
@@ -480,7 +467,6 @@
     // ===================== BUTTON + QUIZ FLOW =====================
     const valentinesButton = document.getElementById("valentinesButton");
 
-    // QUIZ ELEMENTS
     const quizOverlay = document.getElementById("quizOverlay");
     const quizCard = document.getElementById("quizCard");
     const quizQuestion = document.getElementById("quizQuestion");
@@ -516,11 +502,8 @@
     }
 
     function renderQuestion(first = false) {
-      const total = questions.length;
-
       setProgress();
 
-      // liten övergång mellan frågor
       if (!first) {
         quizQuestion.classList.add("fadeSlideOut");
         setTimeout(() => {
@@ -529,11 +512,6 @@
         }, 140);
       } else {
         quizQuestion.textContent = questions[qIndex] + " (ja/nej)";
-      }
-
-      // för sista steget kan baren bli full först när man är klar
-      if (qIndex === total - 1) {
-        progressBar.style.width = `${(qIndex / total) * 100}%`;
       }
     }
 
@@ -546,7 +524,7 @@
     function failQuiz() {
       quizHint.textContent = "Nope 😼 du måste svara rätt på alla för att få vinsten.";
       quizCard.classList.remove("shake");
-      void quizCard.offsetWidth; // restart animation
+      void quizCard.offsetWidth;
       quizCard.classList.add("shake");
 
       setTimeout(() => {
@@ -557,16 +535,13 @@
     }
 
     function finishQuiz() {
-      // fyll progress till 100%
       progressBar.style.width = "100%";
-
       quizHint.textContent = "Perfekt… då vet du redan sanningen 💘";
 
       setTimeout(() => {
         quizOverlay.classList.add("hidden");
         showToast("Du klarade provet, Sarah 💘");
 
-        // “Stort hjärta” känsla: fler hjärtan, större, och från mitten
         bgTarget = 1;
         spawnHeartExplosion(canvas.width / 2, canvas.height / 2, 220, true);
       }, 420);
@@ -574,11 +549,8 @@
 
     btnYes.addEventListener("click", () => {
       qIndex++;
-      if (qIndex >= questions.length) {
-        finishQuiz();
-      } else {
-        renderQuestion(false);
-      }
+      if (qIndex >= questions.length) finishQuiz();
+      else renderQuestion(false);
     });
 
     btnNo.addEventListener("click", () => {
@@ -587,117 +559,15 @@
 
     valentinesButton.addEventListener("click", () => {
       valentinesButton.textContent = "luv you ❤️";
-
-      // bakgrundsskift direkt
       bgTarget = 1;
 
-      // liten hjärt-explosion vid knappen
       const rect = valentinesButton.getBoundingClientRect();
       const cx = rect.left + rect.width / 2;
       const cy = rect.top + rect.height / 2;
       spawnHeartExplosion(cx, cy, 90, false);
 
-      // starta instrument-theme (autoplay kräver click)
-      startThemeMusic();
-
-      // starta quiz efter en liten beat
       setTimeout(openQuiz, 650);
     });
-
-    // ===================== SIMPLE INSTRUMENT THEME (WebAudio) =====================
-    // Mjuk “space/piano pad + pluck” utan text
-    let audioStarted = false;
-    let audioCtx, master, padGain, pluckGain;
-
-    let themeTimer = null;
-    let themeStep = 0;
-
-    // A-minor-ish (romantiskt & lugnt)
-    const scale = [220, 261.63, 293.66, 329.63, 392.0, 440.0]; // A3, C4, D4, E4, G4, A4
-
-    function startThemeMusic() {
-      if (audioStarted) return;
-      audioStarted = true;
-
-      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-
-      master = audioCtx.createGain();
-      master.gain.value = 0.25;
-      master.connect(audioCtx.destination);
-
-      padGain = audioCtx.createGain();
-      padGain.gain.value = 0.12;
-      padGain.connect(master);
-
-      pluckGain = audioCtx.createGain();
-      pluckGain.gain.value = 0.22;
-      pluckGain.connect(master);
-
-      startPad();
-      themeTimer = setInterval(playThemeStep, 380);
-    }
-
-    function startPad() {
-      const o1 = audioCtx.createOscillator();
-      const o2 = audioCtx.createOscillator();
-      o1.type = "sine";
-      o2.type = "triangle";
-      o1.frequency.value = 220;   // A3
-      o2.frequency.value = 110;   // A2
-
-      const filter = audioCtx.createBiquadFilter();
-      filter.type = "lowpass";
-      filter.frequency.value = 700;
-      filter.Q.value = 0.8;
-
-      // “andning”
-      const lfo = audioCtx.createOscillator();
-      lfo.type = "sine";
-      lfo.frequency.value = 0.12;
-
-      const lfoGain = audioCtx.createGain();
-      lfoGain.gain.value = 120;
-
-      lfo.connect(lfoGain);
-      lfoGain.connect(filter.frequency);
-
-      o1.connect(filter);
-      o2.connect(filter);
-      filter.connect(padGain);
-
-      o1.start();
-      o2.start();
-      lfo.start();
-    }
-
-    function playPluck(freq) {
-      const osc = audioCtx.createOscillator();
-      osc.type = "sine";
-      osc.frequency.value = freq;
-
-      const g = audioCtx.createGain();
-      g.gain.setValueAtTime(0.0001, audioCtx.currentTime);
-      g.gain.exponentialRampToValueAtTime(0.25, audioCtx.currentTime + 0.01);
-      g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.22);
-
-      const filter = audioCtx.createBiquadFilter();
-      filter.type = "highpass";
-      filter.frequency.value = 120;
-
-      osc.connect(filter);
-      filter.connect(g);
-      g.connect(pluckGain);
-
-      osc.start();
-      osc.stop(audioCtx.currentTime + 0.25);
-    }
-
-    function playThemeStep() {
-      const pattern = [0, 2, 3, 2, 4, 3, 2, 1];
-      const idx = pattern[themeStep % pattern.length];
-      playPluck(scale[idx]);
-      themeStep++;
-    }
 
     // ===================== MAIN LOOP =====================
     function draw() {
